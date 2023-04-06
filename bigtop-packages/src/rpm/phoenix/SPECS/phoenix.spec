@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-%define phoenix_home /usr/lib/%{name}
+%define phoenix_home %{parent_dir}/usr/lib/%{name}
 %define bin_phoenix %{phoenix_home}/bin
 %define examples_phoenix %{phoenix_home}/examples
 %define etc_phoenix_conf %{_sysconfdir}/%{name}/conf
@@ -20,12 +20,12 @@
 %define var_lib_phoenix /var/lib/%{name}
 %define var_log_phoenix /var/log/%{name}
 %define man_dir %{_mandir}
-%define zookeeper_home /usr/lib/zookeeper
-%define hadoop_home /usr/lib/hadoop
-%define hadoop_mapreduce_home /usr/lib/hadoop-mapreduce
-%define hadoop_yarn_home /usr/lib/hadoop-yarn
-%define hadoop_hdfs_home /usr/lib/hadoop-hdfs
-%define hbase_home /usr/lib/hbase
+%define zookeeper_home %{parent_dir}/usr/lib/zookeeper
+%define hadoop_home %{parent_dir}/usr/lib/hadoop
+%define hadoop_mapreduce_home %{parent_dir}/usr/lib/hadoop-mapreduce
+%define hadoop_yarn_home %{parent_dir}/usr/lib/hadoop-yarn
+%define hadoop_hdfs_home %{parent_dir}/usr/lib/hadoop-hdfs
+%define hbase_home %{parent_dir}/usr/lib/hbase
 #BIGTOP_PATCH_FILES
 
 %if  %{?suse_version:1}0
