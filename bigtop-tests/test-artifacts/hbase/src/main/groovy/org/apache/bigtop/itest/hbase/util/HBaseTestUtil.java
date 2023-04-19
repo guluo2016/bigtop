@@ -29,11 +29,7 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.compress.Compression;
 import org.apache.hadoop.hbase.io.hfile.HFile;
@@ -42,6 +38,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.ChecksumType;
 
 public class HBaseTestUtil {
+
+  private static final String HADOOP_CONF_DIR = System.getenv("HADOOP_CONF_DIR");
+  private static final String HBASE_CONF_DIR = System.getenv("HBASE_CONF_DIR");
 
   public static int BLOCKSIZE = 64 * 1024;
   public static String COMPRESSION =
@@ -63,15 +62,33 @@ public class HBaseTestUtil {
     return htd;
   }
 
-  public static HBaseAdmin getAdmin()
-      throws MasterNotRunningException, ZooKeeperConnectionException {
-    HBaseAdmin hAdmin = null;
+  public static Connection createConnection() {
+    Configuration conf = HBaseConfiguration.create();
+    conf.addResource(new Path(HBASE_CONF_DIR, "hbase-site.xml"));
+    conf.addResource(new Path(HADOOP_CONF_DIR, "core-site.xml"));
+    conf.addResource(new Path(HADOOP_CONF_DIR, "hdfs-site.xml"));
+
+    Connection conn  = null;
     try {
-      hAdmin = new HBaseAdmin(HBaseConfiguration.create());
+      conn = ConnectionFactory.createConnection(conf);
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return hAdmin;
+    return conn;
+  }
+
+  public static Admin getAdmin(Connection conn) throws IOException{
+    if (conn == null) {
+      throw new IOException("Connection must not be null.");
+    }
+
+    Admin admin = null;
+    try {
+      admin = conn.getAdmin();
+    } catch (IOException e) {
+      throw new IOException("Create Admin failed.");
+    }
+    return admin;
   }
 
   public static FileSystem getClusterFileSystem() throws IOException {

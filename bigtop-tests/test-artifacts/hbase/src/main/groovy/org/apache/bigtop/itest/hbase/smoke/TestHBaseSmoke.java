@@ -18,21 +18,22 @@
 package org.apache.bigtop.itest.hbase.smoke;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Assert;
 import org.junit.Test;
 
 import org.apache.bigtop.itest.hbase.util.HBaseTestUtil;
 
+import static org.apache.bigtop.itest.hbase.smoke.TestCopyTable.conf;
+
 public class TestHBaseSmoke {
+  private static final String TEST_TABLE_NAME = "testSimplePutGet";
   private static final byte[] TEST_FAMILY = Bytes.toBytes("f1");
   private static final byte[] TEST_QUALIFIER = Bytes.toBytes("q1");
   private static final byte[] TEST_VALUE = Bytes.toBytes("v1");
@@ -45,41 +46,38 @@ public class TestHBaseSmoke {
    */
   @Test
   public void testSimplePutGet() throws Exception {
-    Configuration conf = HBaseConfiguration.create();
-    HBaseAdmin admin = new HBaseAdmin(conf);
+    Connection conn = HBaseTestUtil.createConnection();
+    Admin admin = HBaseTestUtil.getAdmin(conn);
 
     HTableDescriptor htd =
-        HBaseTestUtil.createTestTableDescriptor("testSimplePutGet", TEST_FAMILY);
+        HBaseTestUtil.createTestTableDescriptor(TEST_TABLE_NAME, TEST_FAMILY);
     admin.createTable(htd);
 
-    byte[] tableName = htd.getName();
     try {
-      HTable table = new HTable(conf, tableName);
+      HTable table = (HTable)conn.getTable(TableName.valueOf(TEST_TABLE_NAME));
       // Write some rows
       for (int i = 0; i < NUM_ROWS; i++) {
         byte[] row = Bytes.toBytes("row_" + i);
         Put p = new Put(row);
-        for (HColumnDescriptor hcd : htd.getFamilies()) {
-          p.add(hcd.getName(), TEST_QUALIFIER, TEST_VALUE);
-        }
+        p.addColumn(TEST_FAMILY, TEST_QUALIFIER, TEST_VALUE)
         table.put(p);
       }
+      admin.flush(TableName.valueOf(TEST_TABLE_NAME));
 
-      table.flushCommits();
 
       // Read some rows
       for (int i = 0; i < NUM_ROWS; i++) {
         byte[] row = Bytes.toBytes("row_" + i);
         Get g = new Get(row);
         Result result = table.get(g);
-        for (HColumnDescriptor hcd : htd.getFamilies()) {
-          byte[] value = result.getValue(hcd.getName(), TEST_QUALIFIER);
-          Assert.assertArrayEquals(TEST_VALUE, value);
-        }
+        byte[] value = result.getValue(TEST_FAMILY, TEST_QUALIFIER);
+        Assert.assertArrayEquals(TEST_VALUE, value);
       }
     } finally {
-      admin.disableTable(tableName);
-      admin.deleteTable(tableName);
+      admin.disableTable(TableName.valueOf(TEST_TABLE_NAME));
+      admin.deleteTable(TableName.valueOf(TEST_TABLE_NAME));
+      admin.close();
+      conn.close();
     }
   }
 }
