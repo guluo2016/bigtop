@@ -445,6 +445,9 @@ for DIR in $PREFIX/$HADOOP_DIR $PREFIX/$HDFS_DIR $PREFIX/$YARN_DIR $PREFIX/$MAPR
      if [[ $j =~ hadoop-(.*)-${HADOOP_VERSION}.jar ]]; then
        name=${BASH_REMATCH[1]}
        ln -s $j hadoop-$name.jar
+       if [[ $DIR == $PREFIX/$HADOOP_MAPRED_HOME ]]; then
+         ln -s hadoop-$name.jar ../$HADOOP_DIR/hadoop-$name.jar
+       fi
      fi
    done)
 done
