@@ -1,0 +1,14 @@
+{
+  "name": "CentOS Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  },
+  "extensions": [
+    "ms-python.python",
+    "redhat.vscode-yaml"
+  ],
+  "remoteUser": "root"
+}
