@@ -70,79 +70,99 @@ OPTS=$(getopt \
   -l 'etc-hadoop:' \
   -- "$@")
 
-if [ $? != 0 ] ; then
-    usage
+if [ $? != 0 ]; then
+  usage
 fi
 
 eval set -- "$OPTS"
-while true ; do
-    case "$1" in
-        --distro-dir)
-        DISTRO_DIR=$2 ; shift 2
-        ;;
-        --build-dir)
-        BUILD_DIR=$2 ; shift 2
-        ;;
-        --prefix)
-        PREFIX=$2 ; shift 2
-        ;;
-        --doc-dir)
-        DOC_DIR=$2 ; shift 2
-        ;;
-        --bin-dir)
-        BIN_DIR=$2 ; shift 2
-        ;;
-        --man-dir)
-        MAN_DIR=$2 ; shift 2
-        ;;
-        --etc-default)
-        ETC_DEFAULT=$2 ; shift 2
-        ;;
-        --hadoop-dir)
-        HADOOP_DIR=$2 ; shift 2
-        ;;
-        --hdfs-dir)
-        HDFS_DIR=$2 ; shift 2
-        ;;
-        --yarn-dir)
-        YARN_DIR=$2 ; shift 2
-        ;;
-        --mapreduce-dir)
-        MAPREDUCE_DIR=$2 ; shift 2
-        ;;
-        --var-hdfs)
-        VAR_HDFS=$2 ; shift 2
-        ;;
-        --var-yarn)
-        VAR_YARN=$2 ; shift 2
-        ;;
-        --var-mapreduce)
-        VAR_MAPREDUCE=$2 ; shift 2
-        ;;
-        --var-httpfs)
-        VAR_HTTPFS=$2 ; shift 2
-        ;;
-        --var-kms)
-        VAR_KMS=$2 ; shift 2
-        ;;
-        --system-include-dir)
-        SYSTEM_INCLUDE_DIR=$2 ; shift 2
-        ;;
-        --system-lib-dir)
-        SYSTEM_LIB_DIR=$2 ; shift 2
-        ;;
-        --etc-hadoop)
-        ETC_HADOOP=$2 ; shift 2
-        ;;
-        --)
-        shift ; break
-        ;;
-        *)
-        echo "Unknown option: $1"
-        usage
-        exit 1
-        ;;
-    esac
+while true; do
+  case "$1" in
+  --distro-dir)
+    DISTRO_DIR=$2
+    shift 2
+    ;;
+  --build-dir)
+    BUILD_DIR=$2
+    shift 2
+    ;;
+  --prefix)
+    PREFIX=$2
+    shift 2
+    ;;
+  --doc-dir)
+    DOC_DIR=$2
+    shift 2
+    ;;
+  --bin-dir)
+    BIN_DIR=$2
+    shift 2
+    ;;
+  --man-dir)
+    MAN_DIR=$2
+    shift 2
+    ;;
+  --etc-default)
+    ETC_DEFAULT=$2
+    shift 2
+    ;;
+  --hadoop-dir)
+    HADOOP_DIR=$2
+    shift 2
+    ;;
+  --hdfs-dir)
+    HDFS_DIR=$2
+    shift 2
+    ;;
+  --yarn-dir)
+    YARN_DIR=$2
+    shift 2
+    ;;
+  --mapreduce-dir)
+    MAPREDUCE_DIR=$2
+    shift 2
+    ;;
+  --var-hdfs)
+    VAR_HDFS=$2
+    shift 2
+    ;;
+  --var-yarn)
+    VAR_YARN=$2
+    shift 2
+    ;;
+  --var-mapreduce)
+    VAR_MAPREDUCE=$2
+    shift 2
+    ;;
+  --var-httpfs)
+    VAR_HTTPFS=$2
+    shift 2
+    ;;
+  --var-kms)
+    VAR_KMS=$2
+    shift 2
+    ;;
+  --system-include-dir)
+    SYSTEM_INCLUDE_DIR=$2
+    shift 2
+    ;;
+  --system-lib-dir)
+    SYSTEM_LIB_DIR=$2
+    shift 2
+    ;;
+  --etc-hadoop)
+    ETC_HADOOP=$2
+    shift 2
+    ;;
+  --)
+    shift
+    break
+    ;;
+  *)
+    echo "Unknown option: $1"
+    usage
+    exit 1
+    ;;
+  esac
 done
 
 for var in PREFIX BUILD_DIR; do
@@ -181,9 +201,9 @@ export PATH="/sbin/:$PATH"
 # Make bin wrappers
 mkdir -p $PREFIX/$BIN_DIR
 
-for component in $PREFIX/$HADOOP_DIR/bin/hadoop $PREFIX/$HDFS_DIR/bin/hdfs $PREFIX/$YARN_DIR/bin/yarn ; do
+for component in $PREFIX/$HADOOP_DIR/bin/hadoop $PREFIX/$HDFS_DIR/bin/hdfs $PREFIX/$YARN_DIR/bin/yarn; do
   wrapper=$PREFIX/$BIN_DIR/${component#*/bin/}
-  cat > $wrapper <<EOF
+  cat >$wrapper <<EOF
 #!/bin/bash
 
 # Autodetect JAVA_HOME if not defined
@@ -199,7 +219,7 @@ done
 # mapreduce
 component=$PREFIX/$MAPREDUCE_DIR/bin/mapred
 wrapper=$PREFIX/$BIN_DIR/${component#*/bin/}
-cat > $wrapper <<EOF
+cat >$wrapper <<EOF
 #!/bin/bash
 
 # Autodetect JAVA_HOME if not defined
@@ -245,7 +265,7 @@ install -d -m 0755 $PREFIX/$HADOOP_DIR/lib
 cp ${BUILD_DIR}/share/hadoop/common/lib/*.jar $PREFIX/$HADOOP_DIR/lib
 install -d -m 0755 $PREFIX/$HADOOP_DIR/tools/lib
 cp ${BUILD_DIR}/share/hadoop/tools/lib/*.jar $PREFIX/$HADOOP_DIR/tools/lib
-install -d -m 0755 $PREFIX/$HDFS_DIR/lib 
+install -d -m 0755 $PREFIX/$HDFS_DIR/lib
 cp ${BUILD_DIR}/share/hadoop/hdfs/lib/*.jar $PREFIX/$HDFS_DIR/lib
 install -d -m 0755 $PREFIX/$YARN_DIR/lib
 cp ${BUILD_DIR}/share/hadoop/yarn/lib/*.jar $PREFIX/$YARN_DIR/lib
@@ -265,6 +285,8 @@ cp -a ${BUILD_DIR}/bin/hdfs $PREFIX/$HDFS_DIR/bin
 install -d -m 0755 $PREFIX/$YARN_DIR/bin
 cp -a ${BUILD_DIR}/bin/{yarn,container-executor} $PREFIX/$YARN_DIR/bin
 install -d -m 0755 $PREFIX/$MAPREDUCE_DIR/bin
+# Fix: BIGTOP-4310
+sed -i "s#\${bin}/../libexec#\${bin}/../../hadoop/libexec#g" ${BUILD_DIR}/bin/mapred
 cp -a ${BUILD_DIR}/bin/mapred $PREFIX/$MAPREDUCE_DIR/bin
 # FIXME: MAPREDUCE-3980
 cp -a ${BUILD_DIR}/bin/mapred $PREFIX/$YARN_DIR/bin
@@ -283,7 +305,7 @@ cp -a ${BUILD_DIR}/sbin/mr-jobhistory-daemon.sh $PREFIX/$MAPREDUCE_DIR/sbin
 install -d -m 0755 $PREFIX/$SYSTEM_LIB_DIR
 install -d -m 0755 $PREFIX/$HADOOP_NATIVE_LIB_DIR
 
-for library in libhdfs.so.0.0.0 libhdfspp.so.0.1.0 ; do
+for library in libhdfs.so.0.0.0 libhdfspp.so.0.1.0; do
   cp ${BUILD_DIR}/lib/native/${library} $PREFIX/$SYSTEM_LIB_DIR/
   ldconfig -vlN $PREFIX/$SYSTEM_LIB_DIR/${library}
   ln -s ${library} $PREFIX/$SYSTEM_LIB_DIR/${library/.so.*/}.so
@@ -294,7 +316,11 @@ cp ${BUILD_DIR}/include/hdfs.h $PREFIX/$SYSTEM_INCLUDE_DIR/
 cp -r ${BUILD_DIR}/include/hdfspp $PREFIX/$SYSTEM_INCLUDE_DIR/
 
 cp ${BUILD_DIR}/lib/native/*.a $PREFIX/$HADOOP_NATIVE_LIB_DIR/
-for library in `cd ${BUILD_DIR}/lib/native ; ls libsnappy.so.1.* 2>/dev/null; ls libisal.so.2.* 2>/dev/null` libhadoop.so.1.0.0 libnativetask.so.1.0.0; do
+for library in $(
+  cd ${BUILD_DIR}/lib/native
+  ls libsnappy.so.1.* 2>/dev/null
+  ls libisal.so.2.* 2>/dev/null
+) libhadoop.so.1.0.0 libnativetask.so.1.0.0; do
   cp ${BUILD_DIR}/lib/native/${library} $PREFIX/$HADOOP_NATIVE_LIB_DIR/
   ldconfig -vlN $PREFIX/$HADOOP_NATIVE_LIB_DIR/${library}
   ln -s ${library} $PREFIX/$HADOOP_NATIVE_LIB_DIR/${library/.so.*/}.so
@@ -302,7 +328,7 @@ done
 
 # Install fuse wrapper
 fuse_wrapper=$PREFIX/$BIN_DIR/hadoop-fuse-dfs
-cat > $fuse_wrapper << EOF
+cat >$fuse_wrapper <<EOF
 #!/bin/bash
 
 /sbin/modprobe fuse
@@ -354,7 +380,7 @@ rm -rf $PREFIX/$ETC_HADOOP/conf.empty/*.cmd
 # Install default wrapper
 install -d -m 0755 $PREFIX/$ETC_DEFAULT
 default_hadoop_wrapper=$PREFIX/$ETC_DEFAULT/hadoop
-cat > $default_hadoop_wrapper << EOF
+cat >$default_hadoop_wrapper <<EOF
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -390,8 +416,8 @@ cp -r ${BUILD_DIR}/share/doc/* $PREFIX/$DOC_DIR/
 # man pages
 mkdir -p $PREFIX/$MAN_DIR
 for manpage in hadoop hdfs yarn mapred; do
-	gzip -c < $DISTRO_DIR/$manpage.1 > $PREFIX/$MAN_DIR/$manpage.1.gz
-	chmod 644 $PREFIX/$MAN_DIR/$manpage.1.gz
+  gzip -c <$DISTRO_DIR/$manpage.1 >$PREFIX/$MAN_DIR/$manpage.1.gz
+  chmod 644 $PREFIX/$MAN_DIR/$manpage.1.gz
 done
 
 # HTTPFS
@@ -400,8 +426,7 @@ install -d -m 0755 ${PREFIX}/${VAR_HTTPFS}
 # KMS
 install -d -m 0755 ${PREFIX}/${VAR_KMS}
 
-
-for conf in conf.pseudo ; do
+for conf in conf.pseudo; do
   install -d -m 0755 $PREFIX/$ETC_HADOOP/$conf
   # Install the upstream config files
   cp -r ${BUILD_DIR}/etc/hadoop/* $PREFIX/$ETC_HADOOP/$conf
@@ -411,15 +436,15 @@ for conf in conf.pseudo ; do
   (cd $DISTRO_DIR/$conf && tar -cf - .) | (cd $PREFIX/$ETC_HADOOP/$conf && tar -xf -)
   find $PREFIX/$ETC_HADOOP/$conf/ -type f -print -exec chmod 0644 {} \;
   find $PREFIX/$ETC_HADOOP/$conf/ -type d -print -exec chmod 0755 {} \;
-  # When building straight out of svn we have to account for pesky .svn subdirs 
-  rm -rf `find $PREFIX/$ETC_HADOOP/$conf -name .svn -type d` 
+  # When building straight out of svn we have to account for pesky .svn subdirs
+  rm -rf $(find $PREFIX/$ETC_HADOOP/$conf -name .svn -type d)
 done
 cp ${BUILD_DIR}/etc/hadoop/log4j.properties $PREFIX/$ETC_HADOOP/conf.pseudo
 
 # Make a symlink of hadoop-yarn-server-timelineservice-hbase-coprocessor.jar to hadoop-yarn-server-timelineservice-hbase-coprocessor-version.jar
-for x in $PREFIX/$YARN_DIR/timelineservice/hadoop-yarn-server-timelineservice-hbase-coprocessor-[[:digit:]]*.jar ; do
+for x in $PREFIX/$YARN_DIR/timelineservice/hadoop-yarn-server-timelineservice-hbase-coprocessor-[[:digit:]]*.jar; do
   x=$(basename $x)
-  ln -s $x  $PREFIX/$YARN_DIR/timelineservice/hadoop-yarn-server-timelineservice-hbase-coprocessor.jar
+  ln -s $x $PREFIX/$YARN_DIR/timelineservice/hadoop-yarn-server-timelineservice-hbase-coprocessor.jar
 done
 
 # FIXME: Provide a convenience link for configuration (HADOOP-7939)
@@ -438,25 +463,27 @@ install -d -m 0755 $PREFIX/var/log/hadoop-mapreduce
 install -d -m 0755 $PREFIX/run/hadoop-mapreduce
 
 # Remove all source and create version-less symlinks to offer integration point with other projects
-for DIR in $PREFIX/$HADOOP_DIR $PREFIX/$HDFS_DIR $PREFIX/$YARN_DIR $PREFIX/$MAPREDUCE_DIR ; do
-  (cd $DIR &&
-   rm -fv *-sources.jar
-   for j in hadoop-*.jar; do
-     if [[ $j =~ hadoop-(.*)-${HADOOP_VERSION}.jar ]]; then
-       name=${BASH_REMATCH[1]}
-       ln -s $j hadoop-$name.jar
-     fi
-   done)
+for DIR in $PREFIX/$HADOOP_DIR $PREFIX/$HDFS_DIR $PREFIX/$YARN_DIR $PREFIX/$MAPREDUCE_DIR; do
+  (
+    cd $DIR &&
+      rm -fv *-sources.jar
+    for j in hadoop-*.jar; do
+      if [[ $j =~ hadoop-(.*)-${HADOOP_VERSION}.jar ]]; then
+        name=${BASH_REMATCH[1]}
+        ln -s $j hadoop-$name.jar
+      fi
+    done
+  )
 done
 
 # Now create a client installation area full of symlinks
 install -d -m 0755 $PREFIX/$HADOOP_DIR/client
-for file in `cat ${BUILD_DIR}/hadoop-client.list` ; do
-  for dir in $PREFIX/$HADOOP_DIR/{lib,} $PREFIX/$HDFS_DIR/{lib,} $PREFIX/$YARN_DIR/{lib,} $PREFIX/$MAPREDUCE_DIR/{lib,} ; do
-    [ -e $dir/$file ] && \
-    ln -fs ${dir#$PREFIX}/$file $PREFIX/$HADOOP_DIR/client/${file} && \
-    ln -fs ${dir#$PREFIX}/$file $PREFIX/$HADOOP_DIR/client/${file/-[[:digit:]]*/.jar} && \
-    continue 2
+for file in $(cat ${BUILD_DIR}/hadoop-client.list); do
+  for dir in $PREFIX/$HADOOP_DIR/{lib,} $PREFIX/$HDFS_DIR/{lib,} $PREFIX/$YARN_DIR/{lib,} $PREFIX/$MAPREDUCE_DIR/{lib,}; do
+    [ -e $dir/$file ] &&
+      ln -fs ${dir#$PREFIX}/$file $PREFIX/$HADOOP_DIR/client/${file} &&
+      ln -fs ${dir#$PREFIX}/$file $PREFIX/$HADOOP_DIR/client/${file/-[[:digit:]]*/.jar} &&
+      continue 2
   done
   exit 1
 done
